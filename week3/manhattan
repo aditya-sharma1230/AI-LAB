@@ -1,0 +1,106 @@
+import heapq
+
+class Node:
+    def __init__(self, data, level, parent=None):
+        self.data = data
+        self.level = level
+        self.parent = parent
+        self.fval = 0
+
+    def __lt__(self, other):
+        return self.fval < other.fval
+
+    def __eq__(self, other):
+        return self.data == other.data
+
+    def __hash__(self):
+        return hash(self.data)
+
+    def find_blank(self):
+        for i in range(3):
+            for j in range(3):
+                if self.data[i][j] == 0:
+                    return i, j
+
+    def generate_children(self):
+        children = []
+        x, y = self.find_blank()
+        moves = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+
+        for new_x, new_y in moves:
+            if 0 <= new_x < 3 and 0 <= new_y < 3:
+                new_data = [list(row) for row in self.data]
+                new_data[x][y], new_data[new_x][new_y] = new_data[new_x][new_y], new_data[x][y]
+                
+                child_node = Node(tuple(tuple(row) for row in new_data), self.level + 1, self)
+                children.append(child_node)
+        return children
+
+    def manhattan_heuristic(self):
+        """Calculates the Manhattan distance heuristic for the 8-puzzle."""
+        distance = 0
+        for i in range(3):
+            for j in range(3):
+                tile = self.data[i][j]
+                if tile != 0:
+                    goal_i, goal_j = divmod(tile - 1, 3)
+                    distance += abs(i - goal_i) + abs(j - goal_j)
+        return distance
+
+
+class Puzzle:
+    def __init__(self):
+        self.goal_state = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
+        self.open = []
+        self.closed = set()
+
+    def f(self, node):
+        return node.level + node.manhattan_heuristic()
+
+    def solve(self):
+        print("Enter the start state (3x3 grid, space-separated, use 0 for blank):")
+        try:
+            start_data = tuple(
+                tuple(int(x) for x in input().split()) for _ in range(3)
+            )
+        except ValueError:
+            print("Invalid input. Please use numbers 0-8 separated by spaces.")
+            return
+        
+        start_node = Node(start_data, 0)
+        start_node.fval = self.f(start_node)
+        heapq.heappush(self.open, start_node)
+        
+        while self.open:
+            current_node = heapq.heappop(self.open)
+
+            if current_node.data == self.goal_state:
+                print("Goal state reached! 🎉")
+                self.print_solution(current_node)
+                return
+
+            self.closed.add(current_node)
+
+            for child in current_node.generate_children():
+                if child not in self.closed:
+                    child.fval = self.f(child)
+                    heapq.heappush(self.open, child)
+        
+        print("No solution found. This state may not be solvable.")
+
+    def print_solution(self, node):
+        path = []
+        while node:
+            path.append(node)
+            node = node.parent
+        path.reverse()
+        
+        print("\nSolution path:")
+        for i, step_node in enumerate(path):
+            print(f"Step {i} (cost: {step_node.level}):")
+            for row in step_node.data:
+                print(row)
+            print()
+
+puz = Puzzle()
+puz.solve()
