@@ -1,0 +1,60 @@
+import random
+
+def print_board(state):
+    n = len(state)
+    for row in range(n):
+        line = ""
+        for col in range(n):
+            if state[col] == row:
+                line += "Q "
+            else:
+                line += ". "
+        print(line)
+    print()
+
+def random_state(n):
+    return [random.randint(0, n - 1) for _ in range(n)]
+
+def heuristic(state):
+    conflicts = 0
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                conflicts += 1
+    return conflicts
+
+def get_neighbors(state):
+    neighbors = []
+    n = len(state)
+    for col in range(n):
+        for row in range(n):
+            if state[col] != row:
+                new_state = state.copy()
+                new_state[col] = row
+                neighbors.append(new_state)
+    return neighbors
+
+def hill_climbing(n=4):
+    current = random_state(n)
+    current_h = heuristic(current)
+
+    while True:
+        neighbors = get_neighbors(current)
+        neighbor_h = [heuristic(neigh) for neigh in neighbors]
+        min_h = min(neighbor_h)
+
+        if min_h >= current_h:
+            break  # Local minimum reached
+        else:
+            index = neighbor_h.index(min_h)
+            current = neighbors[index]
+            current_h = min_h
+
+    return current, current_h
+
+# Run
+solution, cost = hill_climbing()
+print("Hill Climbing Solution:")
+print_board(solution)
+print("Heuristic Cost:", cost)
