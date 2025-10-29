@@ -1,0 +1,111 @@
+def unify(term1, term2, substitution=None):
+    """
+    Unifies two terms (terms can be variables, constants, lists, or compound terms) in first-order logic.
+
+    Args:
+        term1: The first term (can be a variable, constant, list, or compound).
+        term2: The second term (can be a variable, constant, list, or compound).
+        substitution: Current substitution dictionary (default is None).
+
+    Returns:
+        A substitution dictionary if successful, or None (failure).
+    """
+    if substitution is None:
+        substitution = {}
+
+    # Base case: identical terms need no substitution
+    if term1 == term2:
+        return substitution
+
+    # Handle variable cases
+    if is_variable(term1):
+        return unify_variable(term1, term2, substitution)
+    if is_variable(term2):
+        return unify_variable(term2, term1, substitution)
+
+    # Handle compound terms (functions or predicates)
+    if is_compound(term1) and is_compound(term2):
+        # Ensure predicates and their arity match
+        if term1[0] != term2[0] or len(term1[1]) != len(term2[1]):
+            return None
+        # Recursively unify the arguments of the compound terms
+        for arg1, arg2 in zip(term1[1], term2[1]):
+            substitution = unify(arg1, arg2, substitution)
+            if substitution is None:
+                return None
+        return substitution
+
+    # Handle list cases (e.g., unifying [a, b] with [c, d])
+    if isinstance(term1, list) and isinstance(term2, list):
+        if len(term1) != len(term2):
+            return None
+        for elem1, elem2 in zip(term1, term2):
+            substitution = unify(elem1, elem2, substitution)
+            if substitution is None:
+                return None
+        return substitution
+
+    # Failure if terms are incompatible
+    return None
+
+
+def unify_variable(var, expression, substitution):
+    """
+    Unify a variable with an expression, applying occurs check to prevent cyclic substitutions.
+    """
+    if var in substitution:
+        return unify(substitution[var], expression, substitution)
+    if expression in substitution:
+        return unify(var, substitution[expression], substitution)
+    if occurs_check(var, expression, substitution):
+        return None  # Occurs check failed
+    substitution[var] = expression
+    return substitution
+
+
+def occurs_check(var, expr, substitution):
+    """
+    Check if a variable occurs in an expression to prevent cyclic substitutions.
+    """
+    if var == expr:
+        return True
+    if is_compound(expr):
+        return any(occurs_check(var, arg, substitution) for arg in expr[1])
+    if isinstance(expr, list):
+        return any(occurs_check(var, item, substitution) for item in expr)
+    if expr in substitution:
+        return occurs_check(var, substitution[expr], substitution)
+    return False
+
+
+def is_variable(term):
+    """
+    Check if the term is a variable (e.g., starts with '?').
+    """
+    return isinstance(term, str) and term.startswith('?')
+
+
+def is_compound(term):
+    """
+    Check if the term is a compound expression (e.g., predicate or function).
+    """
+    return isinstance(term, tuple) and len(term) == 2 and isinstance(term[1], list)
+
+
+# Interactive Testing
+if __name__ == "__main__":
+    print("Enter expressions in the following format:")
+    print("Compound terms: ('f', ['a', 'b'])")
+    print("Variables: '?x', '?y'")
+    print("Lists: ['a', 'b']")
+    print("Constants: 'a', 'b', etc.\n")
+
+    expr1 = eval(input("Enter first term: "))
+    expr2 = eval(input("Enter second term: "))
+
+    result = unify(expr1, expr2)
+    if result is None:
+        print("Unification failed!")
+    else:
+        print("Unification successful!")
+        print("Substitution Set:", result)
