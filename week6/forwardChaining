@@ -1,0 +1,55 @@
+class DataStore:
+    def __init__(self):
+        self.data_points = set()
+        self.conditions = []
+
+    def add_data_point(self, data_point):
+        self.data_points.add(data_point)
+
+    def add_condition(self, condition):
+        self.conditions.append(condition)
+
+    def process(self):
+        updated = True
+        while updated:
+            updated = False
+            for condition in self.conditions:
+                if condition.evaluate(self.data_points):
+                    updated = True
+
+class Condition:
+    def __init__(self, inputs, outcome):
+        self.inputs = inputs
+        self.outcome = outcome
+
+    def evaluate(self, data_points):
+        if all(input_point in data_points for input_point in self.inputs):
+            if self.outcome not in data_points:
+                data_points.add(self.outcome)
+                print(f"New Data Point: {self.outcome}")
+                return True
+        return False
+
+# Create a new data store instance
+store = DataStore()
+
+# Add initial data points
+store.add_data_point("Employee(John)")
+store.add_data_point("Product(P123)")
+store.add_data_point("Owns(John, P123)")
+store.add_data_point("Competitor(CompanyX)")
+
+# Define conditions
+store.add_condition(Condition(["Product(P123)"], "Item(P123)"))
+store.add_condition(Condition(["Competitor(CompanyX)"], "Rival(CompanyX)"))
+store.add_condition(Condition(["Product(P123)", "Owns(John, P123)"], "Sells(John, P123)"))
+store.add_condition(Condition(["Employee(John)", "Item(P123)", "Sells(John, P123)", "Rival(CompanyX)"], "Breach(John)"))
+
+# Process conditions to infer new data points
+store.process()
+
+# Check if John is in breach
+if "Breach(John)" in store.data_points:
+    print("Conclusion: John has committed a breach.")
+else:
+    print("Conclusion: No evidence of breach for John.")
