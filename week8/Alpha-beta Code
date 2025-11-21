@@ -1,0 +1,48 @@
+def alpha_beta_pruning(node, depth, alpha, beta, maximizing_player, tree):
+    """
+    node: current node index
+    depth: current depth in the tree
+    alpha: best value that the maximizer can guarantee
+    beta: best value that the minimizer can guarantee
+    maximizing_player: True if it's MAX's turn
+    tree: dictionary {node: [child_nodes]}
+    """
+    # Base case: leaf node
+    if node not in tree:
+        return node  # leaf value (integer)
+    
+    if maximizing_player:
+        max_eval = float('-inf')
+        for child in tree[node]:
+            eval = alpha_beta_pruning(child, depth + 1, alpha, beta, False, tree)
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
+                break  # prune
+        return max_eval
+    else:
+        min_eval = float('inf')
+        for child in tree[node]:
+            eval = alpha_beta_pruning(child, depth + 1, alpha, beta, True, tree)
+            min_eval = min(min_eval, eval)
+            beta = min(beta, eval)
+            if beta <= alpha:
+                break  # prune
+        return min_eval
+
+
+# Example tree (based on your image)
+# Structure: parent: [children]
+game_tree = {
+    'A': ['B', 'C'],       # Root (MAX)
+    'B': ['D', 'E'],       # MIN node
+    'C': ['F', 'G'],       # MIN node
+    'D': [10, 9],          # MAX node
+    'E': [14, 18],         # MAX node
+    'F': [5, 4],           # MAX node
+    'G': [50, 3]           # MAX node
+}
+
+# Start alpha-beta search
+best_value = alpha_beta_pruning('A', 0, float('-inf'), float('inf'), True, game_tree)
+print("The optimal value is:", best_value)
