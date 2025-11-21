@@ -1,0 +1,18 @@
+from sympy import symbols
+from sympy.logic.boolalg import Implies, Equivalent, Not, And, Or, to_cnf
+
+# Step 1: Define logical variables
+P, Q, R = symbols('P Q R')
+
+# Step 2: Define your logical statement
+# Example: (P ⇒ Q) ⇔ (¬Q ⇒ ¬P)
+statement = Equivalent(Implies(P, Q), Implies(Not(Q), Not(P)))
+
+print("Original Statement:")
+print(statement)
+
+# Step 3: Convert to CNF using Sympy
+cnf_form = to_cnf(statement, simplify=True)
+
+print("\nConverted to CNF:")
+print(cnf_form)
