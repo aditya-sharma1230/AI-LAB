@@ -1,0 +1,9 @@
+# Example: (P ⇒ (Q ∨ R)) ∧ (¬R ⇒ P)
+expr = And(Implies(P, Or(Q, R)), Implies(Not(R), P))
+
+print("Original Formula:")
+print(expr)
+
+cnf_expr = to_cnf(expr, simplify=True)
+print("\nCNF Form:")
+print(cnf_expr)
